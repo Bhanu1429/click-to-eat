@@ -3,6 +3,7 @@ import "./LoginPopup.css";
 import { assets } from "../../assets/assets";
 import { StoreContext } from "../../context/StoreContext";
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const LoginPopup = ({ setShowLogin }) => {
   const [currState, setCurrState] = useState("Login");
@@ -13,6 +14,7 @@ const LoginPopup = ({ setShowLogin }) => {
     password: "",
   });
   const { url, setToken } = useContext(StoreContext);
+  const navigate = useNavigate(); // Initialize navigate
 
   const onChangeHandler = (event) => {
     const name = event.target.name;
@@ -22,6 +24,20 @@ const LoginPopup = ({ setShowLogin }) => {
 
   const onLogin = async (event) => {
     event.preventDefault();
+    
+    // Check for Admin Login directly
+    if (currState === "Login" && data.email === "admin@gmail.com") {
+        let newUrl = url + "/api/user/login";
+        const response = await axios.post(newUrl, data);
+        if (response.data.success) {
+            setToken(response.data.token);
+            localStorage.setItem("token", response.data.token);
+            setShowLogin(false);
+            navigate("/admin"); // Redirect to admin page
+            return;
+        }
+    }
+
     let newUrl = url;
     if (currState === "Login") {
       newUrl += "/api/user/login";
@@ -47,10 +63,6 @@ const LoginPopup = ({ setShowLogin }) => {
       setContainerClass("signup");
     }
   }, [currState]);
-
-  // useEffect(() => {
-  //   console.log(data);
-  // }, [data]);
 
   return (
     <div className="login-popup">
